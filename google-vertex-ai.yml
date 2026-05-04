@@ -17,7 +17,7 @@ plans:
 - name: sandbox-8h
   id: f6a7b8c9-d0e1-2345-fabc-345678901301
   description: |
-    Sandbox plan — 8-hour TTL, BASIC Memorystore tier, f1-micro notebook only.
+    Sandbox plan — 8-hour TTL with configurable model selection.
     Auto-deprovisioned by TTL controller after ttl_hours. Optional operator
     budget alert email can be configured broker-side.
   display_name: Sandbox 8-hour
