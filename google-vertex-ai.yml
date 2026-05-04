@@ -18,20 +18,25 @@ plans:
   id: f6a7b8c9-d0e1-2345-fabc-345678901301
   description: |
     Sandbox plan — 8-hour TTL with configurable model selection.
+    Supports the same `models` override surface as the standard plan; only the
+    TTL envelope is sandbox-constrained.
     Auto-deprovisioned by TTL controller after ttl_hours. Optional operator
     budget alert email can be configured broker-side.
   display_name: Sandbox 8-hour
   properties:
     ttl_hours: 8
     region: us-central1
-    models: '["gemini-1.5-flash-001","text-embedding-004","gemini-1.0-pro-002"]'
+    models: '["gemini-2.0-flash-001","gemini-2.5-flash","gemini-2.5-flash-lite","gemini-2.5-pro","gemini-3.1-flash","gemini-3.1-pro-preview","gemini-3.1-flash-lite-preview","gemini-3-flash-preview","gemini-3-pro-image-preview","claude-sonnet-4-6","claude-opus-4-6","claude-opus-4-5@20251101","claude-haiku-4-5@20251001","claude-sonnet-4-5@20250929"]'
 - name: standard
   id: a7b8c9d0-e1f2-3456-abcd-456789012401
   description: |
-    Standard plan — configurable TTL and model list.
+    Standard plan — configurable TTL with the same model list override surface
+    exposed by sandbox-8h.
     Optional operator budget alert email can be configured broker-side.
   display_name: Standard
-  properties: {}
+  properties:
+    region: us-central1
+    models: '["gemini-2.0-flash-001","gemini-2.5-flash","gemini-2.5-flash-lite","gemini-2.5-pro","gemini-3.1-flash","gemini-3.1-pro-preview","gemini-3.1-flash-lite-preview","gemini-3-flash-preview","gemini-3-pro-image-preview","claude-sonnet-4-6","claude-opus-4-6","claude-opus-4-5@20251101","claude-haiku-4-5@20251001","claude-sonnet-4-5@20250929"]'
 provision:
   plan_inputs:
   - field_name: ttl_hours
@@ -41,9 +46,10 @@ provision:
   - field_name: models
     type: string
     details: |
-      JSON array of Vertex AI / Gemini model IDs available in the region.
-      Example: '["gemini-1.5-flash-001","text-embedding-004"]'
-    default: '["gemini-1.5-flash-001","text-embedding-004","gemini-1.0-pro-002"]'
+      JSON array of Vertex AI model IDs available in the region, including Gemini and partner models.
+      Supported on both sandbox-8h and standard.
+      Example: '["gemini-3.1-pro-preview","claude-sonnet-4-6"]'
+    default: '["gemini-2.0-flash-001","gemini-2.5-flash","gemini-2.5-flash-lite","gemini-2.5-pro","gemini-3.1-flash","gemini-3.1-pro-preview","gemini-3.1-flash-lite-preview","gemini-3-flash-preview","gemini-3-pro-image-preview","claude-sonnet-4-6","claude-opus-4-6","claude-opus-4-5@20251101","claude-haiku-4-5@20251001","claude-sonnet-4-5@20250929"]'
   - field_name: budget_amount
     type: number
     details: Monthly USD budget threshold metadata for this instance. Alerting is operator-email based when configured broker-side.
@@ -73,6 +79,14 @@ provision:
     default: ${json.marshal(request.default_labels)}
     overwrite: true
     type: object
+  - name: cf_context_json
+    default: ${json.marshal(request.context)}
+    overwrite: true
+    type: string
+  - name: cf_originating_identity_json
+    default: ${json.marshal(request.x_broker_api_originating_identity)}
+    overwrite: true
+    type: string
   - name: credentials
     default: ${config("gcp.credentials")}
     overwrite: true
@@ -93,6 +107,15 @@ provision:
     versions: terraform/vertex-ai/provision/versions.tf
     variables: terraform/vertex-ai/provision/variables.tf
   outputs:
+  - field_name: instance_name
+    type: string
+    details: Requested instance name used as the naming prefix for provisioned resources.
+  - field_name: cf_provenance_json
+    type: string
+    details: JSON object of the Cloud Foundry org, space, and user provenance applied to resource labels.
+  - field_name: resource_labels_json
+    type: string
+    details: JSON object of the effective GCP labels applied to the provisioned resources.
   - field_name: project_id
     type: string
     details: GCP project ID.
@@ -131,6 +154,26 @@ bind:
     default: ${instance.details["project_id"]}
     overwrite: true
     type: string
+  - name: instance_name
+    default: ${instance.details["instance_name"]}
+    overwrite: true
+    type: string
+  - name: resource_labels_json
+    default: ${instance.details["resource_labels_json"]}
+    overwrite: true
+    type: string
+  - name: cf_context_json
+    default: ${json.marshal(request.context)}
+    overwrite: true
+    type: string
+  - name: cf_originating_identity_json
+    default: ${json.marshal(request.x_broker_api_originating_identity)}
+    overwrite: true
+    type: string
+  - name: cf_app_guid
+    default: ${request.app_guid}
+    overwrite: true
+    type: string
   - name: region
     default: ${instance.details["region"]}
     overwrite: true
@@ -151,10 +194,6 @@ bind:
     default: ${instance.details["available_models"]}
     overwrite: true
     type: string
-  - name: budget_amount
-    default: ${instance.details["budget_amount"]}
-    overwrite: true
-    type: number
   - name: budget_enforcement_mode
     default: ${instance.details["budget_enforcement_mode"]}
     overwrite: true
@@ -177,6 +216,15 @@ bind:
   - field_name: credentials_json
     type: string
     details: Service account key JSON for authenticating to Vertex AI.
+  - field_name: instance_name
+    type: string
+    details: Requested instance name used as the naming prefix for provisioned resources.
+  - field_name: binding_provenance_json
+    type: string
+    details: JSON object of the Cloud Foundry org, space, user, and bound app provenance for this binding.
+  - field_name: resource_labels_json
+    type: string
+    details: JSON object of the effective GCP labels applied to the provisioned resources.
   - field_name: project_id
     type: string
     details: GCP project ID.
@@ -192,9 +240,6 @@ bind:
   - field_name: bucket_name
     type: string
     details: GCS artifact bucket name.
-  - field_name: budget_amount
-    type: number
-    details: Monthly USD budget threshold metadata for this instance.
   - field_name: budget_enforcement_mode
     type: string
     details: Whether an optional operator budget alert email is configured broker-side.

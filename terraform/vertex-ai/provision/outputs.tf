@@ -2,8 +2,20 @@ output "project_id" {
   value = local.resolved_project
 }
 
+output "instance_name" {
+  value = var.instance_name
+}
+
+output "cf_provenance_json" {
+  value = jsonencode(local.cf_provenance)
+}
+
 output "region" {
   value = var.region
+}
+
+output "resource_labels_json" {
+  value = jsonencode(local.common_labels)
 }
 
 output "service_account_email" {

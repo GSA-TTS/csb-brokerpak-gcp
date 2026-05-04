@@ -50,14 +50,3 @@ resource "google_storage_bucket" "ml_artifacts" {
 
   depends_on = [google_project_service.storage]
 }
-
-# Vertex AI online endpoint (model serving target)
-resource "google_vertex_ai_endpoint" "main" {
-  name         = substr("csb-${var.instance_name}", 0, 60)
-  display_name = "CSB Sandbox Endpoint — ${var.instance_name}"
-  location     = var.region
-  project      = local.resolved_project
-  labels       = local.common_labels
-
-  depends_on = [google_project_service.vertex_ai]
-}

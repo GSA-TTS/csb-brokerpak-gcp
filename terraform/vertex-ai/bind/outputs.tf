@@ -3,6 +3,25 @@ output "credentials_json" {
   sensitive = true
 }
 
+output "instance_name" {
+  value = var.instance_name
+}
+
+output "resource_labels_json" {
+  value = var.resource_labels_json
+}
+
+output "binding_provenance_json" {
+  value = jsonencode({
+    cf_organization_guid = try(jsondecode(var.cf_context_json).organization_guid, "")
+    cf_organization_name = try(jsondecode(var.cf_context_json).organization_name, "")
+    cf_space_guid        = try(jsondecode(var.cf_context_json).space_guid, "")
+    cf_space_name        = try(jsondecode(var.cf_context_json).space_name, "")
+    cf_user_id           = try(jsondecode(var.cf_originating_identity_json).user_id, jsondecode(var.cf_originating_identity_json).value.user_id, "")
+    cf_app_guid          = var.cf_app_guid
+  })
+}
+
 output "project_id" {
   value = var.project_id
 }
@@ -21,10 +40,6 @@ output "models" {
 
 output "bucket_name" {
   value = var.bucket_name
-}
-
-output "budget_amount" {
-  value = var.budget_amount
 }
 
 output "budget_enforcement_mode" {
