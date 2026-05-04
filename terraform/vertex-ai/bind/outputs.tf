@@ -23,6 +23,14 @@ output "bucket_name" {
   value = var.bucket_name
 }
 
+output "budget_amount" {
+  value = var.budget_amount
+}
+
+output "budget_enforcement_mode" {
+  value = var.budget_enforcement_mode
+}
+
 output "ttl_expires_at" {
   value = var.ttl_expires_at
 }

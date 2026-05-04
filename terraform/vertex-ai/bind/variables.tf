@@ -4,6 +4,8 @@ variable "service_account_id" { type = string }
 variable "bucket_name" { type = string }
 variable "api_endpoint" { type = string }
 variable "available_models" { type = string }
+variable "budget_amount" { type = number }
+variable "budget_enforcement_mode" { type = string }
 variable "ttl_expires_at" { type = string }
 variable "credentials" {
   type      = string

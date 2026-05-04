@@ -18,7 +18,8 @@ plans:
   id: f6a7b8c9-d0e1-2345-fabc-345678901301
   description: |
     Sandbox plan — 8-hour TTL, BASIC Memorystore tier, f1-micro notebook only.
-    Auto-deprovisioned by TTL controller after ttl_hours.
+    Auto-deprovisioned by TTL controller after ttl_hours. Optional operator
+    budget alert email can be configured broker-side.
   display_name: Sandbox 8-hour
   properties:
     ttl_hours: 8
@@ -26,7 +27,9 @@ plans:
     models: '["gemini-1.5-flash-001","text-embedding-004","gemini-1.0-pro-002"]'
 - name: standard
   id: a7b8c9d0-e1f2-3456-abcd-456789012401
-  description: Standard plan — configurable TTL and model list.
+  description: |
+    Standard plan — configurable TTL and model list.
+    Optional operator budget alert email can be configured broker-side.
   display_name: Standard
   properties: {}
 provision:
@@ -41,6 +44,10 @@ provision:
       JSON array of Vertex AI / Gemini model IDs available in the region.
       Example: '["gemini-1.5-flash-001","text-embedding-004"]'
     default: '["gemini-1.5-flash-001","text-embedding-004","gemini-1.0-pro-002"]'
+  - field_name: budget_amount
+    type: number
+    details: Monthly USD budget threshold metadata for this instance. Alerting is operator-email based when configured broker-side.
+    default: 100
   user_inputs:
   - field_name: instance_name
     type: string
@@ -74,6 +81,10 @@ provision:
     default: ${config("gcp.project")}
     overwrite: true
     type: string
+  - name: budget_alert_email
+    default: ${config("gcp.budget_alert_email")}
+    overwrite: true
+    type: string
   template_refs:
     data: terraform/vertex-ai/provision/data.tf
     main: terraform/vertex-ai/provision/main.tf
@@ -103,6 +114,12 @@ provision:
   - field_name: available_models
     type: string
     details: JSON array of available model IDs.
+  - field_name: budget_amount
+    type: number
+    details: Monthly USD budget threshold metadata for this instance.
+  - field_name: budget_enforcement_mode
+    type: string
+    details: Whether an optional operator budget alert email is configured broker-side.
   - field_name: ttl_expires_at
     type: string
     details: RFC3339 timestamp when this instance expires.
@@ -132,6 +149,14 @@ bind:
     type: string
   - name: available_models
     default: ${instance.details["available_models"]}
+    overwrite: true
+    type: string
+  - name: budget_amount
+    default: ${instance.details["budget_amount"]}
+    overwrite: true
+    type: number
+  - name: budget_enforcement_mode
+    default: ${instance.details["budget_enforcement_mode"]}
     overwrite: true
     type: string
   - name: ttl_expires_at
@@ -167,6 +192,12 @@ bind:
   - field_name: bucket_name
     type: string
     details: GCS artifact bucket name.
+  - field_name: budget_amount
+    type: number
+    details: Monthly USD budget threshold metadata for this instance.
+  - field_name: budget_enforcement_mode
+    type: string
+    details: Whether an optional operator budget alert email is configured broker-side.
   - field_name: ttl_expires_at
     type: string
     details: RFC3339 timestamp when this instance expires.

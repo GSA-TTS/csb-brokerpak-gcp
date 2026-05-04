@@ -26,6 +26,14 @@ output "available_models" {
   value = var.models
 }
 
+output "budget_amount" {
+  value = var.budget_amount
+}
+
+output "budget_enforcement_mode" {
+  value = local.budget_enforcement_mode
+}
+
 output "ttl_expires_at" {
   value = local.ttl_expires_at
 }
