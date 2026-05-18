@@ -1,5 +1,5 @@
-output "credentials_json" {
-  value     = base64decode(google_service_account_key.binding_key.private_key)
+output "api_key" {
+  value     = var.api_key
   sensitive = true
 }
 
@@ -26,20 +26,12 @@ output "project_id" {
   value = var.project_id
 }
 
-output "region" {
-  value = var.region
-}
-
 output "api_endpoint" {
   value = var.api_endpoint
 }
 
 output "models" {
   value = var.available_models
-}
-
-output "bucket_name" {
-  value = var.bucket_name
 }
 
 output "budget_enforcement_mode" {
@@ -54,26 +46,26 @@ output "normalized_binding_json" {
   value = jsonencode({
     version            = "v1"
     provider           = "gcp"
-    provisioner_family = "google_vertex_identity"
+    provisioner_family = "google_gemini_key"
     connection_type    = "runtime"
     endpoint = {
       base_url    = var.api_endpoint
-      region      = var.region
+      region      = "global"
       api_version = null
     }
     access = {
-      mode       = "gcp_access_token"
+      mode       = "api_key"
       expires_at = null
     }
     grant = {
-      kind                 = "service_account"
+      kind                 = "scoped_key"
       least_privilege_unit = "project"
       allowed_models       = try(jsondecode(var.available_models), [])
     }
     credential = {
-      format = "service_account_json"
+      format = "api_key"
       inline = {
-        credentials_json = base64decode(google_service_account_key.binding_key.private_key)
+        api_key = var.api_key
       }
       secret_ref = null
     }

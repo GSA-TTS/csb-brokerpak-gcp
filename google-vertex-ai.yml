@@ -3,15 +3,18 @@ version: 1
 name: csb-google-vertex-ai
 id: b2c3d4e5-f6a7-8901-bcde-f01234567801
 description: |
-  CSB GCP Vertex AI — brokers a dedicated service account key for Vertex AI inference
-  and a GCS artifact bucket. Provision creates a service account with aiplatform.user
+  CSB GCP Vertex AI — current access family: google_vertex_identity.
+  Brokers a dedicated service account key for Vertex AI inference and a GCS
+  artifact bucket. Provision creates a service account with aiplatform.user
   role; bind returns a service account key JSON in VCAP_SERVICES credentials.
+  This identity-backed flow remains distinct from the future google_gemini_key
+  family, which will expose key-oriented access instead of Vertex IAM grants.
 display_name: CSB GCP Vertex AI
 image_url: file://service-images/csb.png
 documentation_url: https://cloud.google.com/vertex-ai/docs
 provider_display_name: GSA TTS
 support_url: https://cloud.google.com/vertex-ai/
-tags: [gcp, vertex-ai, ai, llm, generative-ai]
+tags: [gcp, vertex-ai, ai, llm, generative-ai, identity]
 plan_updateable: true
 plans:
 - name: sandbox-8h
@@ -22,6 +25,7 @@ plans:
     TTL envelope is sandbox-constrained.
     Auto-deprovisioned by TTL controller after ttl_hours. Optional operator
     budget alert email can be configured broker-side.
+    Access family: google_vertex_identity.
   display_name: Sandbox 8-hour
   properties:
     ttl_hours: 8
@@ -33,6 +37,7 @@ plans:
     Standard plan — configurable TTL with the same model list override surface
     exposed by sandbox-8h.
     Optional operator budget alert email can be configured broker-side.
+    Access family: google_vertex_identity.
   display_name: Standard
   properties:
     region: us-central1
@@ -246,3 +251,6 @@ bind:
   - field_name: ttl_expires_at
     type: string
     details: RFC3339 timestamp when this instance expires.
+  - field_name: normalized_binding_json
+    type: string
+    details: Normalized v1 runtime binding payload for cross-provider consumers.
